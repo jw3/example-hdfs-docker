@@ -1,3 +1,4 @@
+import com.typesafe.sbt.packager.docker.ExecCmd
 enablePlugins(JavaAppPackaging)
 
 organization := "com.github.jw3"
@@ -38,13 +39,16 @@ libraryDependencies ++= {
         "org.scalatest" %% "scalatest" % "2.2.5" % Test,
         "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
         "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaStreamVersion % Test
-    )
+    ).map(d => d.exclude("org.slf4j", "slf4j-log4j12"))
 }
+
+lazy val exclusions = Seq(
+    ("org.slf4j" -> "slf4j-log4j12")
+)
 
 ////////////////////////
 // docker
 //
-import com.typesafe.sbt.packager.docker.ExecCmd
 
 dockerBaseImage := "anapsix/alpine-java:jre8"
 dockerExposedPorts := Seq(8080)
