@@ -12,6 +12,7 @@ licenses +=("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
 libraryDependencies ++= {
     val akkaVersion = "2.4.1"
     val akkaStreamVersion = "2.0.1"
+    val hdfsVersion = "2.7.1"
 
     Seq(
         "wiii" %% "awebapi" % "0.3",
@@ -20,7 +21,8 @@ libraryDependencies ++= {
         "com.typesafe" % "config" % "1.3.0",
         "net.ceedubs" %% "ficus" % "1.1.2",
 
-        "org.apache.hadoop" % "hadoop-client" % "2.7.2",
+        "org.apache.hadoop" % "hadoop-common" % hdfsVersion,
+        "org.apache.hadoop" % "hadoop-hdfs" % hdfsVersion,
         "org.twitter4j" % "twitter4j-core" % "4.0.4",
         "org.twitter4j" % "twitter4j-stream" % "4.0.4",
         "com.softwaremill.reactivekafka" %% "reactive-kafka-core" % "0.9.0",
