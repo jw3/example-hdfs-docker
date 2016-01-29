@@ -1,3 +1,5 @@
+enablePlugins(JavaAppPackaging)
+
 organization := "com.github.jw3"
 name := "example-docker-hdfs"
 version := "0.1"
@@ -38,3 +40,30 @@ libraryDependencies ++= {
         "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaStreamVersion % Test
     )
 }
+
+////////////////////////
+// docker
+//
+import com.typesafe.sbt.packager.docker.ExecCmd
+
+dockerBaseImage := "anapsix/alpine-java:jre8"
+dockerExposedPorts := Seq(8080)
+dockerCommands ++= {
+    val entrypointPath = s"${(defaultLinuxInstallLocation in Docker).value}/bin/${executableScriptName.value}"
+    Seq(
+        ExecCmd("RUN", "chmod", "+x", entrypointPath)
+    )
+}
+
+////////////////////////
+// assembly
+//
+mainClass in assembly := Option("wiii.Boot")
+assembleArtifact in assemblyPackageScala := true
+assemblyMergeStrategy in assembly := {
+    case m if m.toLowerCase.endsWith("manifest.mf") => MergeStrategy.discard
+    case m if m.toLowerCase.matches("meta-inf.*\\.sf$") => MergeStrategy.discard
+    case "reference.conf" => MergeStrategy.concat
+    case _ => MergeStrategy.first
+}
+test in assembly := {}

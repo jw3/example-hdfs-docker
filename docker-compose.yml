@@ -1,0 +1,7 @@
+svc:
+  build: ./target/docker/stage/
+  links:
+    - hdfs
+
+hdfs:
+  image: sequenceiq/hadoop-docker:2.6.0
