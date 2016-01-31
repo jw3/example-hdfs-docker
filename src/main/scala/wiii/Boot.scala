@@ -13,6 +13,9 @@ import wiii.awa.WebApi
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
+import net.ceedubs.ficus.Ficus._
+
+
 /**
  * a hand rolled httpfs like interface to hdfs
  */
@@ -21,11 +24,14 @@ object Boot extends App with WebApi with LazyLogging {
     implicit val materializer: ActorMaterializer = ActorMaterializer()
     override def config: Option[Config] = Option(actorSystem.settings.config)
 
+    val hdfshost = config.get.getAs[String]("hdfs.host").getOrElse("localhost")
+    val hdfsport = config.get.getAs[Int]("hdfs.port").getOrElse(50070)
+
     val download =
         (get & pathPrefix("dl")) {
             path("file" / Segment) { path =>
                 complete {
-                    val source = Source.actorPublisher(StreamingActor.props("localhost", 5000, path))
+                    val source = Source.actorPublisher(StreamingActor.props(hdfshost, hdfsport, path))
                     HttpResponse(entity = Chunked(ContentTypes.`application/octet-stream`, source))
                 }
             } ~ path("dir" / Segment) { path =>
