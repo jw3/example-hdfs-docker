@@ -34,7 +34,6 @@ object Boot extends App with WebApi with LazyLogging {
 
     val filesysActor = actorSystem.actorOf(FileSystemActor.props(hdfshost, hdfsport))
 
-
     val download =
         get {
             path(Segment) { path =>
@@ -60,9 +59,12 @@ object Boot extends App with WebApi with LazyLogging {
             }
         }
 
-    val stat =
+    val stats =
         (get & path("stat" / Segment)) { path =>
-            complete("stat request")
+            val f = (filesysActor ? stat(path))
+                    .mapTo[StatResult]
+                    .map(r => r.toJson)
+            onComplete(f) { res => complete(res) }
         }
 
     val list =
@@ -76,7 +78,7 @@ object Boot extends App with WebApi with LazyLogging {
         }
 
     logger.info("starting Service")
-    webstart(download ~ upload ~ delete ~ stat)
+    webstart(download ~ upload ~ delete ~ stats ~ list)
 
     Await.ready(actorSystem.whenTerminated, Duration.Inf)
 }
