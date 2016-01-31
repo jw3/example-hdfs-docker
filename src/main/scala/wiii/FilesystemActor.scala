@@ -1,43 +1,31 @@
 package wiii
 
-import java.io.FileNotFoundException
-
 import akka.actor.{Actor, Props}
-import akka.stream.actor.ActorPublisher
-import akka.stream.actor.ActorPublisherMessage.{Request, Cancel}
-import akka.stream.scaladsl.StreamConverters
-import akka.util.ByteString
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.hadoop.fs.FileSystem
+import wiii.Messages.{IsDirectory, ls}
 
-case class LoadFile(path: String)
-
-object StreamingActor {
-    def props(host: String, port: Int, path: String) = Props(new StreamingActor(host, port, path))
+object FileSystemActor {
+    def props(host: String, port: Int) = Props(new FileSystemActor(host, port))
 }
-class StreamingActor(host: String, port: Int, path: String) extends ActorPublisher[ByteString]  with LazyLogging {
+
+class FileSystemActor(host: String, port: Int) extends Actor with Filer with LazyLogging {
     val filesys = {
         val conf = new Configuration()
         conf.set("fs.default.name", s"hdfs://$host:$port")
         FileSystem.get(conf)
     }
 
-    val chunkSize = 1024
-    val arr = Array.ofDim[Byte](chunkSize)
-
     def receive: Receive = {
-        case Request(cnt) =>
-            val uri = new Path(path)
-            uri match {
-                case p if !filesys.exists(p) => throw new FileNotFoundException(s"$p does not exist")
-                case p if !filesys.getFileStatus(p).isFile => throw new FileNotFoundException(s"$p is not a file")
-                case p =>
-                    val is = filesys.open(p)
-                    val readBytes = is.read(arr)
-                    onNext(ByteString.fromArray(arr, 0, readBytes))
-            }
-        case Cancel => context.stop(self)
-        case _ =>
+        case IsDirectory(path) => sender() ! isDirectory(path)
+        case ls(path) =>
+            sender ! (isDirectory(path) match {
+                case true =>
+                    import Implicits._
+                    filesys.listFiles(path, false).map(_.getPath.getName).toSeq
+                case false =>
+                    new IllegalArgumentException(s"$path is not a directory")
+            })
     }
 }
