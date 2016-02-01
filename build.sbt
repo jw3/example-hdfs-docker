@@ -53,7 +53,7 @@ lazy val exclusions = Seq(
 //
 
 dockerBaseImage := "anapsix/alpine-java:jre8"
-dockerExposedPorts := Seq(8080)
+dockerExposedPorts := Seq(9999)
 dockerCommands ++= {
     val entrypointPath = s"${(defaultLinuxInstallLocation in Docker).value}/bin/${executableScriptName.value}"
     Seq(
