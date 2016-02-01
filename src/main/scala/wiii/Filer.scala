@@ -1,6 +1,7 @@
 package wiii
 
-import org.apache.hadoop.fs.{Path, FileSystem}
+import org.apache.hadoop.fs.FileSystem
+import wiii.Implicits._
 import wiii.Messages.StatResult
 
 /**
@@ -21,7 +22,4 @@ trait Filer {
 
         StatResult(name, size, owner, modified, accessed)
     }
-
-    // implicits
-    implicit def strToHadoopPath(string: String): Path = new Path(string)
 }
